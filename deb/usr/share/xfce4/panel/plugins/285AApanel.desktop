@@ -1,0 +1,8 @@
+[Xfce Panel]
+Type=X-XFCE-PanelPlugin
+Name=285 AA Panel
+Comment=Displays Onlinee Soldiers and Active Servers
+Icon=gtk-info
+X-XFCE-Module=lib285AApanel
+X-XFCE-Internal=FALSE
+X-XFCE-API=2.0

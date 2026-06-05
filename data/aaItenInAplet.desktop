@@ -1,0 +1,6 @@
+[Plugin]
+Name=AA 2.8.5 Item in Applet
+Comment=Displays 2 numerical values. Online soldiers, Active Servers
+Icon=gtk-info
+X-XFCE-Module=aaItenInAplet
+X-XFCE-Internal=false

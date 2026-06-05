@@ -1,0 +1,68 @@
+name: Build and Release .deb
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag name for the release (e.g. v1.0.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-3-dev libnotify-dev libjson-glib-dev libcurl4-openssl-dev libxfce4panel-2.0-dev debhelper
+
+      - name: Set TAG
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          else
+            echo "TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
+
+      - name: Build project
+        run: |
+          make -C . clean || true
+          make -C .
+
+      - name: Package .deb
+        run: |
+          set -e
+          mkdir -p deb/usr/lib/xfce4/panel-plugins
+          cp 285AApanel.so deb/usr/lib/xfce4/panel-plugins/lib285AApanel
+          DEB_NAME=285AApanel_${TAG}_amd64.deb
+          dpkg-deb -b deb "$DEB_NAME"
+          ls -lh "$DEB_NAME"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ env.TAG }}
+          release_name: Release ${{ env.TAG }}
+          body: Automated release for ${{ env.TAG }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload .deb to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./285AApanel_${{ env.TAG }}_amd64.deb
+          asset_name: 285AApanel_${{ env.TAG }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

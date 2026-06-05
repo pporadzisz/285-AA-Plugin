@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    remove|purge)
+        USER=$(logname 2>/dev/null)
+        if [ -n "$USER" ] && pgrep -f xfce4-panel > /dev/null 2>&1; then
+            DBUS_ADDR=$(cat /proc/$(pgrep -f xfce4-panel)/environ 2>/dev/null | tr '\0' '\n' | grep ^DBUS_SESSION_BUS_ADDRESS= | cut -d= -f2-)
+            if [ -n "$DBUS_ADDR" ]; then
+                runuser -u "$USER" -- env DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" xfce4-panel -r || true
+            fi
+        fi
+        echo "25AApanel plugin removed successfully."
+        ;;
+    *)
+        ;;
+esac
